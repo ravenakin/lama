@@ -5,13 +5,14 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 
 app.use(express.static('public'));
+app.use(express.json());
 
 app.post('/run-model', (req, res) => {
   const python = spawn('python', ['./app.py', req.body.input]);
-  let dataToSend;
+  let dataToSend = '';
 
   python.stdout.on('data', (data) => {
-    dataToSend = data.toString();
+    dataToSend += data.toString();
   });
 
   python.on('close', (code) => {
@@ -20,9 +21,17 @@ app.post('/run-model', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-  console.log('a user connected');
   socket.on('chat message', (msg) => {
-    io.emit('chat message', msg);
+    // Call the Python script to get the model's response
+    fetch('/run-model', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ input: msg })
+    })
+      .then((res) => res.text())
+      .then((response) => {
+        io.emit('chat message', response);
+      });
   });
 });
 
