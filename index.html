@@ -22,24 +22,36 @@
         var input = document.getElementById('input');
         var messages = document.getElementById('messages');
 
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (input.value) {
-                fetch('/get_response', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_input: input.value })
-                })
-                .then((res) => res.json())
-                .then((data) => {
-                    var item = document.createElement('li');
-                    item.textContent = data.response;
-                    messages.appendChild(item);
-                    window.scrollTo(0, document.body.scrollHeight);
-                });
-                input.value = '';
-            }
-        });
-    </script>
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (input.value) {
+            var userMessage = "USER: " + input.value;
+            var userItem = document.createElement('li');
+            userItem.textContent = userMessage;
+            messages.appendChild(userItem);
+
+            fetch('/get_response', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_input: input.value })
+            })
+            .then((res) => res.json())
+            .then((data) => {
+                var assistantMessage = "ASSISTANT: " + data.response;
+                var assistantItem = document.createElement('li');
+                assistantItem.textContent = assistantMessage;
+                messages.appendChild(assistantItem);
+                window.scrollTo(0, document.body.scrollHeight);
+            });
+            input.value = '';
+        }
+    });
+
+    // Adding the initial prompt
+    var promptMessage = "USER: I have difficulties in making friends, and I really need someone to talk to. Would you be my friend?";
+    var promptItem = document.createElement('li');
+    promptItem.textContent = promptMessage;
+    messages.appendChild(promptItem);
+</script>
 </body>
 </html>
